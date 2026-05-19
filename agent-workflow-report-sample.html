@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent 工作流诊断报告</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream:   #F2EBE0;
+        --paper:   #FBF8F3;
+        --white:   #FFFFFF;
+        --ink:     #18120C;
+        --muted:   #6D5E50;
+        --dim:     #A8998A;
+        --rule:    rgba(24, 18, 12, 0.11);
+        --rule2:   rgba(24, 18, 12, 0.06);
+        --accent:  #C85A29;
+        --accent2: #1A7A6B;
+        --accent3: #8A5E14;
+        --a-bg:    rgba(200, 90, 41, 0.07);
+        --a-bg2:   rgba(26, 122, 107, 0.07);
+      }
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        background: var(--cream);
+        color: var(--ink);
+        font-family: "Inter", "PingFang SC", "Noto Sans SC", sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ── PAGE SHELL ── */
+      .page {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 40px 120px;
+      }
+
+      /* ── TOP BAR ── */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 0 22px;
+        border-bottom: 1px solid var(--rule);
+        margin-bottom: 0;
+      }
+
+      .topbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--accent);
+      }
+
+      .topbar-brand svg {
+        width: 22px;
+        height: 22px;
+        fill: var(--accent);
+      }
+
+      .topbar-meta {
+        font-size: 12px;
+        color: var(--dim);
+        letter-spacing: 0.03em;
+      }
+
+      /* ── HERO ── */
+      .hero {
+        padding: 72px 0 56px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 28px;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 20px;
+        height: 1.5px;
+        background: var(--accent);
+        flex-shrink: 0;
+      }
+
+      .hero-body {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 64px;
+        align-items: start;
+      }
+
+      h1 {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: clamp(36px, 4.8vw, 58px);
+        font-weight: 700;
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        max-width: 680px;
+      }
+
+      .subtitle {
+        margin-top: 24px;
+        font-size: 16px;
+        line-height: 1.8;
+        color: var(--muted);
+        max-width: 560px;
+      }
+
+      /* ── METRICS PANEL ── */
+      .metrics-panel {
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        background: var(--paper);
+        overflow: hidden;
+        margin-top: 4px;
+      }
+
+      .metric {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--rule2);
+      }
+
+      .metric:last-child {
+        border-bottom: none;
+      }
+
+      .metric-label {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-bottom: 5px;
+      }
+
+      .metric-value {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.3;
+      }
+
+      /* ── SECTION WRAPPER ── */
+      .section {
+        padding: 64px 0;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .section:last-child {
+        border-bottom: none;
+      }
+
+      .section-layout {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 64px;
+        align-items: start;
+      }
+
+      /* ── SECTION LABEL COL ── */
+      .section-label {
+        position: sticky;
+        top: 32px;
+      }
+
+      .section-num {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 8px;
+      }
+
+      .section-label h2 {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        margin-bottom: 14px;
+      }
+
+      .section-label p {
+        font-size: 13.5px;
+        line-height: 1.75;
+        color: var(--muted);
+      }
+
+      /* ── CONTENT AREA ── */
+      .content { min-width: 0; }
+
+      /* ── CARD GRID ── */
+      .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+      .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; }
+
+      /* ── CARD ── */
+      .card {
+        background: var(--paper);
+        padding: 28px 26px;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+      }
+
+      .card + .card {
+        border-left: none;
+      }
+
+      .grid-2 .card + .card {
+        border-left: none;
+      }
+
+      .tag {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+        border: 1px solid rgba(200, 90, 41, 0.25);
+        border-radius: 2px;
+        padding: 3px 8px;
+        margin-bottom: 16px;
+      }
+
+      .card h3 {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 10px;
+        line-height: 1.3;
+      }
+
+      .card p,
+      .card li {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+
+      ul, ol { padding-left: 18px; }
+      li + li { margin-top: 6px; }
+
+      /* ── FLOW ── */
+      .flow {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        overflow: hidden;
+        background: var(--paper);
+      }
+
+      .flow-step {
+        display: grid;
+        grid-template-columns: 52px 1fr;
+        gap: 0;
+        border-bottom: 1px solid var(--rule2);
+        transition: background 0.15s;
+      }
+
+      .flow-step:last-child { border-bottom: none; }
+
+      .flow-step:hover { background: var(--white); }
+
+      .flow-idx {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 26px;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--accent);
+        opacity: 0.55;
+        border-right: 1px solid var(--rule2);
+        flex-shrink: 0;
+      }
+
+      .flow-body {
+        padding: 22px 26px;
+      }
+
+      .flow-body strong {
+        display: block;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+
+      .flow-body p {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      /* ── CALLOUT ── */
+      .callout-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+      .callout {
+        border-radius: 2px;
+        padding: 30px 28px;
+        border: 1px solid var(--rule);
+      }
+
+      .callout.c-orange {
+        background: var(--a-bg);
+        border-color: rgba(200, 90, 41, 0.18);
+      }
+
+      .callout.c-teal {
+        background: var(--a-bg2);
+        border-color: rgba(26, 122, 107, 0.18);
+      }
+
+      .callout h3 {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 12px;
+        line-height: 1.35;
+      }
+
+      .callout p {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+
+      /* ── PRIORITY CARDS ── */
+      .priority-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+      .priority-card {
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+
+      .priority-head {
+        padding: 20px 22px 16px;
+        border-bottom: 1px solid var(--rule2);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .priority-head h3 {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--ink);
+        line-height: 1.3;
+        margin-bottom: 6px;
+      }
+
+      .priority-head .desc {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .badge {
+        flex-shrink: 0;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        padding: 5px 10px;
+        border-radius: 2px;
+        white-space: nowrap;
+      }
+
+      .b-p1 { background: rgba(26, 122, 107, 0.12); color: var(--accent2); }
+      .b-p2 { background: rgba(138, 94, 20, 0.1); color: var(--accent3); }
+      .b-p3 { background: rgba(200, 90, 41, 0.1); color: var(--accent); }
+
+      .priority-body {
+        padding: 18px 22px;
+      }
+
+      .priority-body li {
+        font-size: 13.5px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      /* ── BRIEF TEMPLATE ── */
+      .brief {
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        padding: 36px;
+      }
+
+      .brief-title {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 24px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .brief ol {
+        counter-reset: brief;
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .brief ol li {
+        counter-increment: brief;
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        font-size: 14.5px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .brief ol li::before {
+        content: "0" counter(brief);
+        flex-shrink: 0;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--accent);
+        min-width: 28px;
+        margin-top: 1px;
+      }
+
+      /* ── TIMELINE CARDS ── */
+      .timeline-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+      .timeline-card {
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        padding: 28px;
+      }
+
+      .timeline-card h3 {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 22px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .timeline-card ol {
+        counter-reset: tl;
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .timeline-card ol li {
+        counter-increment: tl;
+        display: flex;
+        gap: 14px;
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .timeline-card ol li::before {
+        content: counter(tl);
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--cream);
+        border: 1px solid var(--rule);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--accent);
+        margin-top: 2px;
+      }
+
+      /* ── BOUNDARY ── */
+      .boundary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+      .boundary-card {
+        border-radius: 2px;
+        padding: 28px;
+        border: 1px solid var(--rule);
+        background: var(--paper);
+      }
+
+      .boundary-card.bc-yes {
+        border-top: 3px solid var(--accent2);
+      }
+
+      .boundary-card.bc-no {
+        border-top: 3px solid var(--accent);
+      }
+
+      .boundary-card .tag {
+        margin-bottom: 14px;
+      }
+
+      .boundary-card h3 {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 16px;
+        line-height: 1.3;
+      }
+
+      .boundary-card li {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      /* ── FOOTER / CONCLUSION ── */
+      .conclusion {
+        padding: 56px 0 0;
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 64px;
+        align-items: start;
+        border-top: 1px solid var(--rule);
+        margin-top: 0;
+      }
+
+      .conclusion-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--dim);
+        padding-top: 4px;
+      }
+
+      .conclusion-text {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 20px;
+        font-weight: 500;
+        font-style: italic;
+        line-height: 1.65;
+        color: var(--ink);
+        border-left: 3px solid var(--accent);
+        padding-left: 24px;
+      }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 900px) {
+        .page { padding: 0 20px 80px; }
+
+        .hero-body,
+        .section-layout,
+        .conclusion {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+
+        .section-label { position: static; }
+
+        .grid-3,
+        .priority-grid,
+        .callout-grid,
+        .timeline-grid,
+        .boundary-grid { grid-template-columns: 1fr; }
+
+        .grid-2 { grid-template-columns: 1fr; }
+
+        .card + .card { border-left: 1px solid var(--rule); border-top: none; }
+
+        h1 { font-size: 36px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-brand">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.8 2.4 8.4 16.8h3.6l1.2-3.6h4.8l1.2 3.6H23L17.6 2.4h-3.8zm-.6 7.8 1.4-4.2 1.4 4.2h-2.8zM1 16.8h3.6V2.4H1v14.4z"/>
+          </svg>
+          Agent 工作流诊断报告
+        </div>
+        <div class="topbar-meta">Personal Report &nbsp;·&nbsp; 2026-05-19</div>
+      </header>
+
+      <!-- HERO -->
+      <section class="hero">
+        <div class="eyebrow">Agent Workflow Diagnostic</div>
+        <div class="hero-body">
+          <div>
+            <h1>为 AI 技术视频创作者设计的 Agent 工作流</h1>
+            <p class="subtitle">
+              诊断对象是一个面向程序员与开发者受众的 AI 技术内容创作者。核心矛盾不是剪辑，不是配音，而是"选题找素材"过慢，导致从发现题目到发布经常超过 3 天，其中约 1 天消耗在找题、判断题、补素材和决定拆解角度。
+            </p>
+          </div>
+          <div class="metrics-panel">
+            <div class="metric">
+              <div class="metric-label">副业模式</div>
+              <div class="metric-value">B 站商单 + YouTube 创作收益</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">核心瓶颈</div>
+              <div class="metric-value">选题找素材</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">最强目标</div>
+              <div class="metric-value">找到最可能带来播放增长的题</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">内容定位</div>
+              <div class="metric-value">原理拆解 / 技术科普</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 01 工作画像 -->
+      <section class="section">
+        <div class="section-layout">
+          <div class="section-label">
+            <div class="section-num">01</div>
+            <h2>工作画像</h2>
+            <p>你不是泛 AI 资讯号。你的竞争力在于把新产品和新趋势，翻译成程序员能理解的技术方向判断。</p>
+          </div>
+          <div class="content">
+            <div class="grid-3">
+              <div class="card">
+                <span class="tag">Audience</span>
+                <h3>核心受众</h3>
+                <p>程序员、开发者。你的内容必须帮助他们理解未来技术方向，而不是只知道"今天又发了个新功能"。</p>
+              </div>
+              <div class="card">
+                <span class="tag">Selection Logic</span>
+                <h3>选题判断逻辑</h3>
+                <p>优先关注 AI 新产品与新趋势，尤其是 X 上讨论突然变多、并且有明显争议与传播性的事件。</p>
+              </div>
+              <div class="card">
+                <span class="tag">Teaching Style</span>
+                <h3>表达风格</h3>
+                <p>你更适合"用具体案例带出原理"，尤其偏爱和旧方案对比后差异明显的案例，以此建立技术主线。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 流程地图 -->
+      <section class="section">
+        <div class="section-layout">
+          <div class="section-label">
+            <div class="section-num">02</div>
+            <h2>流程地图</h2>
+            <p>当前流程最大的浪费不是执行，而是前置判断。你在投入实测和脚本前，缺少一个稳定的研究员层。</p>
+          </div>
+          <div class="content">
+            <div class="flow">
+              <div class="flow-step">
+                <div class="flow-idx">1</div>
+                <div class="flow-body">
+                  <strong>发现信号</strong>
+                  <p>刷 X、公众号、其他创作者内容，捕捉 AI 新产品或新趋势。</p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div class="flow-idx">2</div>
+                <div class="flow-body">
+                  <strong>判断值不值得做</strong>
+                  <p>主要依据是讨论度、传播性，以及是否可能带来播放增长。</p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div class="flow-idx">3</div>
+                <div class="flow-body">
+                  <strong>补关键素材</strong>
+                  <p>需要产品实测截图、录屏、体验过程，但经常不知道该测哪些功能最值得拍。</p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div class="flow-idx">4</div>
+                <div class="flow-body">
+                  <strong>确定拆解角度</strong>
+                  <p>想做原理拆解 / 技术科普，但常卡在"不知道最值得讲的技术主线是什么"。</p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div class="flow-idx">5</div>
+                <div class="flow-body">
+                  <strong>生成视频判断</strong>
+                  <p>在多个候选题里做取舍，最难的是判断哪个题播放潜力更高。</p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div class="flow-idx">6</div>
+                <div class="flow-body">
+                  <strong>进入脚本与制作</strong>
+                  <p>一旦题定下来，才进入口播逻辑、实测、脚本与后续制作。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 诊断结论 -->
+      <section class="section">
+        <div class="section-layout">
+          <div class="section-label">
+            <div class="section-num">03</div>
+            <h2>诊断结论</h2>
+            <p>你当前最该接入的不是"全自动做视频 Agent"，而是"选题研究员 Agent"。先把研究前置层做强。</p>
+          </div>
+          <div class="content">
+            <div class="callout-grid">
+              <div class="callout c-orange">
+                <h3>最值得优先自动化的环节</h3>
+                <p>每天自动生成一份 3 分钟内看完的研究员简报，告诉你"今日最值得做的 1 个题"，并附带 3 个对创作者 / 从业者最有实际价值的看点。</p>
+              </div>
+              <div class="callout c-teal">
+                <h3>不建议一开始自动化的环节</h3>
+                <p>最终观点判断、是否立项、视频立场与表达风格。这些是账号辨识度所在，应该继续由你亲自把关。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 推荐工作流 -->
+      <section class="section">
+        <div class="section-layout">
+          <div class="section-label">
+            <div class="section-num">04</div>
+            <h2>推荐 Agent 工作流</h2>
+            <p>下面不是工具清单，而是 3 条可落地的工作流。顺序已经按"投入产出比"排好。</p>
+          </div>
+          <div class="content">
+            <div class="priority-grid">
+              <div class="priority-card">
+                <div class="priority-head">
+                  <div>
+                    <h3>每日选题研究员</h3>
+                    <div class="desc">从官方账号与 X 异动中，筛出最值得做的 1 个题。</div>
+                  </div>
+                  <div class="badge b-p1">P1</div>
+                </div>
+                <div class="priority-body">
+                  <ul>
+                    <li>输入: OpenAI、Google、Anthropic 官方动态；AI 大号；创始人；关键词流。</li>
+                    <li>Agent 步骤: 监控新动态 → 识别讨论突然放大 → 判断传播性 → 汇总背景与关键事实。</li>
+                    <li>输出: 一段 3 分钟内看完的简报。</li>
+                    <li>人工审核点: 这个题是否符合你的账号定位，而不只是热点。</li>
+                    <li>自动化等级: 半自动，高价值，低风险。</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="priority-card">
+                <div class="priority-head">
+                  <div>
+                    <h3>技术主线拆解器</h3>
+                    <div class="desc">把"新闻"变成"值得讲清楚的原理"。</div>
+                  </div>
+                  <div class="badge b-p2">P2</div>
+                </div>
+                <div class="priority-body">
+                  <ul>
+                    <li>输入: 已选中的 1 个候选题、官方文档、讨论串、演示案例。</li>
+                    <li>Agent 步骤: 判断最值得讲的技术主线 → 找出上一代方案 → 提炼新旧差异。</li>
+                    <li>输出: 一个适合口播展开的逻辑大纲。</li>
+                    <li>人工审核点: 讲解深度是否够，是否会滑向"新闻复述"。</li>
+                    <li>自动化等级: 半自动，中风险，强依赖你的审美与判断。</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="priority-card">
+                <div class="priority-head">
+                  <div>
+                    <h3>对比案例搜索器</h3>
+                    <div class="desc">自动找出新方案最直接的上一代方案，帮你建立对照。</div>
+                  </div>
+                  <div class="badge b-p3">P3</div>
+                </div>
+                <div class="priority-body">
+                  <ul>
+                    <li>输入: 某个新产品、新功能或新技术方向。</li>
+                    <li>Agent 步骤: 搜索同类旧方案 → 归纳旧工作流 → 提炼替代关系。</li>
+                    <li>输出: 3 组新旧对照案例，附差异点与可讲性。</li>
+                    <li>人工审核点: 对照是否准确，是否会误导观众。</li>
+                    <li>自动化等级: 中等，适合作为工作流 2 的配套模块。</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 05 简报模板 -->
+      <section class="section">
+        <div class="section-layout">
+          <div class="section-label">
+            <div class="section-num">05</div>
+            <h2>简报模板</h2>
+            <p>这是最适合你当前阶段的标准输出。它必须先给结论，再给证据，不要写成流水账。</p>
+          </div>
+          <div class="content">
+            <div class="brief">
+              <div class="brief-title">每日 3 分钟研究员简报</div>
+              <ol>
+                <li>今日最值得做的 1 个题: 用一句话直接下判断。</li>
+                <li>为什么现在值得做: 传播性、争议点、中文区空位、时效窗口。</li>
+                <li>3 个最值得讲的看点: 偏创作者 / 从业者的实际价值，而不是泛科普。</li>
+                <li>事件背景和关键信息: 官方动态、发布时间、外部讨论摘要。</li>
+                <li>建议下一步: 值得先测哪些功能，优先找哪些素材。</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 优先级排序 -->
+      <section class="section">
+        <div class="section-layout">
+          <div class="section-label">
+            <div class="section-num">06</div>
+            <h2>优先级排序</h2>
+            <p>先解决选题研究，再解决技术主线，再解决对比案例。顺序不能反，否则你会继续被前置判断拖住。</p>
+          </div>
+          <div class="content">
+            <div class="grid-3">
+              <div class="card">
+                <span class="tag">Priority 1</span>
+                <h3>每日选题研究员</h3>
+                <p>直接减少你每天人工刷信息流和判断题的时间，预期能先吃掉 30% 到 50% 的选题时间。</p>
+              </div>
+              <div class="card">
+                <span class="tag">Priority 2</span>
+                <h3>技术主线拆解器</h3>
+                <p>帮助你从"知道这是新闻"升级到"知道该怎么讲原理"，减少卡在结构设计上的时间。</p>
+              </div>
+              <div class="card">
+                <span class="tag">Priority 3</span>
+                <h3>对比案例搜索器</h3>
+                <p>补齐新旧方案对照，让你的内容更像技术判断，而不是功能介绍。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 07 启动计划 -->
+      <section class="section">
+        <div class="section-layout">
+          <div class="section-label">
+            <div class="section-num">07</div>
+            <h2>启动计划</h2>
+            <p>7 天内验证研究员简报的价值，30 天内形成完整工作流闭环。</p>
+          </div>
+          <div class="content">
+            <div class="timeline-grid">
+              <div class="timeline-card">
+                <h3>7 天启动计划</h3>
+                <ol>
+                  <li>列出第一批监控源: 官方账号、核心博主、创始人、关键词。</li>
+                  <li>定义"值得做视频"的硬规则: 传播性、争议度、技术方向性。</li>
+                  <li>做出第一版研究员简报模板，控制在 3 分钟内读完。</li>
+                  <li>连续跑 3 天，观察简报是否真能帮你缩短判断时间。</li>
+                  <li>记录每条简报最终是否立项，建立反馈闭环。</li>
+                </ol>
+              </div>
+              <div class="timeline-card">
+                <h3>30 天升级路线</h3>
+                <ol>
+                  <li>把"是否立项"和"发布后的播放表现"回写，形成选题评分数据。</li>
+                  <li>增加"技术主线拆解"模块，让每个候选题自动生成口播逻辑大纲。</li>
+                  <li>增加"上一代方案识别"模块，自动提供对比案例池。</li>
+                  <li>逐步把工作流沉淀成固定 SOP，减少你每次从零判断。</li>
+                  <li>最终目标不是全自动发片，而是稳定做出更高命中率的题。</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 08 边界判断 -->
+      <section class="section">
+        <div class="section-layout">
+          <div class="section-label">
+            <div class="section-num">08</div>
+            <h2>边界判断</h2>
+            <p>不是所有环节都应该交给 Agent。下面这条边界非常关键。</p>
+          </div>
+          <div class="content">
+            <div class="boundary-grid">
+              <div class="boundary-card bc-yes">
+                <span class="tag">适合 Agent</span>
+                <h3>高频、结构化、前置研究任务</h3>
+                <ul>
+                  <li>监控官方动态与讨论异动</li>
+                  <li>筛出候选题并排序</li>
+                  <li>汇总事件背景和关键事实</li>
+                  <li>找上一代方案和对照案例</li>
+                </ul>
+              </div>
+              <div class="boundary-card bc-no">
+                <span class="tag" style="color:var(--accent);border-color:rgba(200,90,41,.25)">不应外包</span>
+                <h3>账号观点与表达辨识度</h3>
+                <ul>
+                  <li>最终立项判断</li>
+                  <li>视频观点与站位</li>
+                  <li>讲解层次和个人表达节奏</li>
+                  <li>对技术方向的最终结论</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONCLUSION -->
+      <div class="conclusion">
+        <div class="conclusion-label">报告结论</div>
+        <p class="conclusion-text">
+          你的第一优先级不是"做视频 Agent"，而是"做选题研究员 Agent"。先让 Agent 帮你把值得做的题选准，再谈后面的脚本、实测和规模化。
+        </p>
+      </div>
+
+    </div>
+  </body>
+</html>
